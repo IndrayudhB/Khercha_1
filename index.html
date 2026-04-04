@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e11">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Kharcha — Expense Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR NAV -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">Khar<span>cha</span></div>
+  <ul class="sidebar-menu">
+    <li class="active" id="nav-home"      onclick="showView('home')">
+      <div class="icon">＋</div> Add / Expense
+    </li>
+    <li id="nav-history"   onclick="showView('history')">
+      <div class="icon">📅</div> Transaction History
+    </li>
+    <li id="nav-budget"    onclick="showView('budget')">
+      <div class="icon">💰</div> Cash Management
+    </li>
+    <li id="nav-analytics" onclick="showView('analytics')">
+      <div class="icon">📊</div> Analytics
+    </li>
+    <li id="nav-settings"  onclick="showView('settings')">
+      <div class="icon">⚙️</div> Settings
+    </li>
+  </ul>
+</nav>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="topbar-month" id="topbarMonth"></div>
+  <div class="topbar-actions">
+    <button onclick="changeMonth(-1)" aria-label="Previous month">‹</button>
+    <button onclick="changeMonth(1)"  aria-label="Next month">›</button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- ── HOME VIEW ── -->
+  <div class="view active" id="view-home">
+
+    <div class="summary-grid">
+      <div class="summary-card accent-card">
+        <div class="label">Total Spent</div>
+        <div class="amount" id="totalSpent">₹0</div>
+        <div class="sub" id="txCount">0 transactions</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Remaining</div>
+        <div class="amount" id="remaining">₹0</div>
+        <div class="sub">of budget</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Income</div>
+        <div class="amount" id="totalIncome" style="color:var(--accentIncome)">₹0</div>
+        <div class="sub">this month</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Budget</div>
+        <div class="amount" id="budgetDisplay">—</div>
+        <div class="sub" id="budgetSub">not set</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">This Month</span>
+      <span class="count-badge" id="entryBadge">0 entries</span>
+    </div>
+
+    <div class="transaction-list" id="txList">
+      <div class="empty-state">
+        <span class="big">💸</span>
+        No transactions yet.<br>Tap + to add one.
+      </div>
+    </div>
+
+  </div><!-- /view-home -->
+
+  <!-- ── HISTORY VIEW ── -->
+  <div class="view" id="view-history">
+
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calChangeMonth(-1)" aria-label="Previous month">‹</button>
+      <div class="cal-month-label" id="calMonthLabel"></div>
+      <button class="cal-nav" onclick="calChangeMonth(1)"  aria-label="Next month">›</button>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="day-panel" id="dayPanel">
+      <div class="day-panel-inner">
+        <div class="day-panel-title">
+          <span id="dayPanelTitle"></span>
+          <button class="day-panel-close" onclick="closeDayPanel()" aria-label="Close">✕</button>
+        </div>
+        <div class="transaction-list" id="dayPanelList"></div>
+      </div>
+    </div>
+
+    <div class="accordion" id="allHistoryAccordion">
+      <div class="accordion-header" onclick="toggleAccordion()">
+        <div class="accordion-left">
+          <span class="accordion-title">All Transactions</span>
+          <span class="accordion-count" id="allHistoryCount">0 entries</span>
+        </div>
+        <span class="accordion-arrow">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content" id="allHistoryList"></div>
+      </div>
+    </div>
+
+  </div><!-- /view-history -->
+
+  <!-- ── BUDGET VIEW ── -->
+  <div class="view" id="view-budget">
+
+    <div class="section-header">
+      <span class="section-title">Cash Management</span>
+    </div>
+
+    <div class="summary-grid" style="margin-bottom:20px">
+      <div class="summary-card">
+        <div class="label">Budget Set</div>
+        <div class="amount" id="budgetCardAmount">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Remaining</div>
+        <div class="amount" id="budgetCardRemain">—</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="budgetInput">Set Monthly Budget</label>
+      <input type="number" class="form-input" id="budgetInput"
+             placeholder="e.g. 20000" min="0" inputmode="numeric">
+    </div>
+    <button class="btn-primary" onclick="saveBudget()">Save Budget</button>
+    <button class="btn-secondary" onclick="clearBudget()">Clear Budget</button>
+
+  </div><!-- /view-budget -->
+
+  <!-- ── ANALYTICS VIEW ── -->
+  <div class="view" id="view-analytics">
+
+    <div class="section-header">
+      <span class="section-title">6-Month Overview</span>
+    </div>
+
+    <div class="graph-card">
+      <div class="graph-header">
+        <span class="graph-title">Monthly Spending</span>
+        <div class="graph-legend">
+          <div class="graph-legend-item">
+            <div class="graph-legend-dot expense"></div>Expense
+          </div>
+          <div class="graph-legend-item">
+            <div class="graph-legend-dot income"></div>Income
+          </div>
+        </div>
+      </div>
+      <div class="graph-bars" id="graphBars"></div>
+    </div>
+
+    <button class="export-btn" onclick="exportCSV()">
+      ⬇ Export All Transactions as CSV
+    </button>
+
+    <div class="section-header">
+      <span class="section-title">This Month's Breakdown</span>
+    </div>
+    <div id="categoryBreakdown"></div>
+
+  </div><!-- /view-analytics -->
+
+  <!-- ── SETTINGS VIEW ── -->
+  <div class="view" id="view-settings">
+
+    <div class="section-header">
+      <span class="section-title">Theme</span>
+    </div>
+
+    <div class="theme-switcher">
+      <!-- Row 1: original 4 themes -->
+      <button class="theme-btn active" id="theme-dark" onclick="setTheme('dark')">
+        <div class="theme-swatch" style="background:#0e0e11;border:1px solid #2a2a36"></div>
+        Dark
+      </button>
+      <button class="theme-btn" id="theme-bright" onclick="setTheme('bright')">
+        <div class="theme-swatch" style="background:#f5f7fa;border:1px solid #d8dce6"></div>
+        Bright
+      </button>
+      <button class="theme-btn" id="theme-cream" onclick="setTheme('cream')">
+        <div class="theme-swatch" style="background:#faf6f0;border:1px solid #ddd0c0"></div>
+        Cream
+      </button>
+      <button class="theme-btn" id="theme-purple" onclick="setTheme('purple')">
+        <div class="theme-swatch" style="background:#0f0a1e;border:1px solid #3b2d5e"></div>
+        Royal
+      </button>
+    </div>
+
+    <!-- Neon theme in its own row for emphasis -->
+    <div class="theme-switcher" style="margin-top:8px">
+      <button class="theme-btn" id="theme-neon" onclick="setTheme('neon')"
+              style="flex:none;width:100%;flex-direction:row;justify-content:center;gap:12px;padding:14px 20px;min-height:56px">
+        <div class="theme-swatch-neon"></div>
+        <span style="font-size:.8rem;letter-spacing:.5px">⚡ Neon — Kharcha Edition</span>
+      </button>
+    </div>
+
+    <div class="section-header" style="margin-top:24px">
+      <span class="section-title">Recurring Transactions</span>
+    </div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px;line-height:1.5">
+      Save templates for transactions you add often — tap Use to pre-fill the form.
+    </div>
+
+    <div class="transaction-list" id="recurringList" style="margin-bottom:14px"></div>
+    <button class="btn-secondary" onclick="openRecurringModal()" style="margin-top:0">
+      + Add Recurring Template
+    </button>
+
+    <div class="section-header" style="margin-top:24px">
+      <span class="section-title">Data</span>
+    </div>
+    <div class="settings-note">
+      More settings coming soon — CSV export is in Analytics. Categories and more themes on the way.
+    </div>
+    <button class="btn-secondary"
+            style="margin-top:14px;color:var(--accent2);border-color:var(--accent2)"
+            onclick="clearAllData()">
+      ⚠️ Clear All Data
+    </button>
+
+  </div><!-- /view-settings -->
+
+</main>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()" aria-label="Add transaction">＋</button>
+
+<!-- ── ADD TRANSACTION MODAL ── -->
+<div class="modal-overlay" id="addModal" role="dialog" aria-modal="true" aria-label="Add Transaction">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Transaction</div>
+
+    <div id="quickChipsWrap" style="display:none">
+      <div class="form-label" style="margin-bottom:8px">Quick Fill</div>
+      <div class="quick-chips" id="quickChips"></div>
+    </div>
+
+    <div class="type-toggle">
+      <button class="type-btn active-expense" id="btnExpense" onclick="setType('expense')">− Expense</button>
+      <button class="type-btn"                id="btnIncome"  onclick="setType('income')">+ Income</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="txDesc">Description</label>
+      <input type="text" class="form-input" id="txDesc"
+             placeholder="e.g. Groceries, Salary…" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="txAmount">Amount</label>
+      <input type="number" class="form-input" id="txAmount"
+             placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="txCategory">Category</label>
+      <select class="form-select" id="txCategory">
+        <option>🛒 Groceries</option>
+        <option>🍽️ Food &amp; Dining</option>
+        <option>🚗 Transport</option>
+        <option>🏠 Housing</option>
+        <option>💊 Health</option>
+        <option>🎮 Entertainment</option>
+        <option>👕 Shopping</option>
+        <option>💼 Salary</option>
+        <option>💰 Other Income</option>
+        <option>📦 Miscellaneous</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="txDate">Date</label>
+      <input type="date" class="form-input" id="txDate">
+    </div>
+
+    <button class="btn-primary"   onclick="saveTransaction()">Save Transaction</button>
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ── RECURRING TEMPLATE MODAL ── -->
+<div class="modal-overlay" id="recurringModal" role="dialog" aria-modal="true" aria-label="Add Recurring Template">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Recurring Template</div>
+
+    <div class="type-toggle">
+      <button class="type-btn active-expense" id="recBtnExpense" onclick="setRecType('expense')">− Expense</button>
+      <button class="type-btn"                id="recBtnIncome"  onclick="setRecType('income')">+ Income</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="recDesc">Description</label>
+      <input type="text" class="form-input" id="recDesc"
+             placeholder="e.g. Netflix, Rent, Salary…" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="recAmount">Default Amount (optional)</label>
+      <input type="number" class="form-input" id="recAmount"
+             placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="recCategory">Category</label>
+      <select class="form-select" id="recCategory">
+        <option>🛒 Groceries</option>
+        <option>🍽️ Food &amp; Dining</option>
+        <option>🚗 Transport</option>
+        <option>🏠 Housing</option>
+        <option>💊 Health</option>
+        <option>🎮 Entertainment</option>
+        <option>👕 Shopping</option>
+        <option>💼 Salary</option>
+        <option>💰 Other Income</option>
+        <option>📦 Miscellaneous</option>
+      </select>
+    </div>
+
+    <button class="btn-primary"   onclick="saveRecurring()">Save Template</button>
+    <button class="btn-secondary" onclick="closeRecurringModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
